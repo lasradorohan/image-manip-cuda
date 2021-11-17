@@ -8,7 +8,7 @@
 #include "device_launch_parameters.h"
 #include "Dispatch.h"
 
-void callBW();
+void executeBlackWhite(uchar4* image, size_t height, size_t width);
 
 
 #endif
