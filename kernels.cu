@@ -57,3 +57,31 @@ void executeRotate(uchar4** image, size_t *height, size_t *width, float phi) {
 	*height = out_h;
 	*width = out_w;
 }
+
+__global__ void contrast(uchar4* image, size_t height, size_t width,float alpha) {
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+	if (x < height && y < width) {
+		int idx = x * width + y;
+		image[idx].x = alpha * image[idx].x;
+		image[idx].y = alpha * image[idx].y;
+		image[idx].z = alpha * image[idx].z;
+		if(image[idx].x > 255)
+			image[idx].x = 255;
+		if (image[idx].y > 255)
+			image[idx].y = 255;
+		if (image[idx].z > 255)
+			image[idx].z = 255;
+	}
+}
+
+
+void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha) {
+	size_t in_h = *height;
+	size_t in_w = *width;
+	uchar4* d_image;
+	cudaMalloc(&d_image, in_h * in_w * sizeof(uchar4));
+	cudaMemcpy(d_image, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
+	contrast << <dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >> > (d_image, in_h, in_w,alpha);
+	cudaMemcpy(*image, d_image, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}

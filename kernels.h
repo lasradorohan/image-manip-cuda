@@ -10,5 +10,5 @@
 
 void executeBlackWhite(uchar4** image, size_t *height, size_t *width);
 void executeRotate(uchar4** image, size_t *height, size_t *width, float phi);
-
+void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha);
 #endif

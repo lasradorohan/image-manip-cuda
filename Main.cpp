@@ -15,8 +15,8 @@ auto main() -> int
 	uchar4* image;
 	size_t height, width;
 	Dispatch::loadImageRGBA(".\\resources\\opera_house.jpg", &image, &height, &width);
-	float phi = 0.349066f;
-	executeRotate(&image, &height, &width, phi);
+	float alpha = 1.15f;
+	executeContrast(&image, &height, &width,alpha);
 	Dispatch::saveImageRGBA(image, height, width, ".\\resources\\opera_house_mod.jpg");
 	return 0;
 }

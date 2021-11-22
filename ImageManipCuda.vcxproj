@@ -41,8 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\Programs\libraries\OpenCV-4.5.4\opencv\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Programs\libraries\OpenCV-4.5.4\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\VIT\SEM-5\Parallel Distribution and Computing\Project\opencv\build\include;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\VIT\SEM-5\Parallel Distribution and Computing\Project\opencv\build\x64\vc15\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
