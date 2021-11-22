@@ -83,7 +83,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="kernels.cu" />
-    <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.h" />
@@ -91,6 +90,7 @@
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="CommandQueue.h" />
     <ClInclude Include="kernels.h" />
     <ClInclude Include="InteractivePrompt.h" />
   </ItemGroup>

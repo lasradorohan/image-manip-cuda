@@ -6,6 +6,8 @@
 
 #include "kernels.h"
 
+#include "CommandQueue.h"
+
 auto main() -> int
 {
 	//InteractivePrompt prompt;
@@ -13,6 +15,15 @@ auto main() -> int
 	uchar4* image;
 	size_t height, width;
 	Dispatch::loadImageRGBA(".\\resources\\opera_house.jpg", &image, &height, &width);
-	executeBlackWhite(image, height, width);
+	float phi = 0.349066f;
+	executeRotate(&image, &height, &width, phi);
 	Dispatch::saveImageRGBA(image, height, width, ".\\resources\\opera_house_mod.jpg");
+	return 0;
 }
+
+//auto main() -> int {
+//	CommandQueue cq;
+//	cq.addCommand(std::make_shared<TempCommand>(123.0f));
+//	cq.addCommand(std::make_shared<Temp2Command>(123.0f, 32.0f));
+//	cq.printQueue();
+//}
