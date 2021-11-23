@@ -13,6 +13,8 @@ auto main() -> int {
 	//RadialDistortionImageCommand(-0.5f).execute(&image, &height, &width);
 	//InteractivePrompt prompt;
 	//prompt.promptLoop();
+	//float alpha = 1.15f;
+	//executeContrast(&image, &height, &width, alpha);
 	uchar4* image;
 	size_t height, width;
 	Dispatch::loadImageRGBA(".\\resources\\opera_house.jpg", &image, &height, &width);

@@ -40,4 +40,5 @@ public:
 	void execute(uchar4** image, size_t* height, size_t* width);
 };
 
+void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha);
 #endif
