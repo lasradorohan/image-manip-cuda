@@ -1,5 +1,5 @@
-#ifndef BLACKWHITE_H_
-#define BLACKWHITE_H_
+#ifndef IMAGE_COMMANDS_H_
+#define IMAGE_COMMANDS_H_
 
 #include <cuda.h>
 #include <cuda_runtime.h>
