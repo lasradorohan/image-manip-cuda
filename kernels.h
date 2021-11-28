@@ -1,22 +1,29 @@
-#ifndef BLACKWHITE
-#define BLACKWHITE
+#ifndef BLACKWHITE_H_
+#define BLACKWHITE_H_
 
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include <stdio.h>
+#include <iostream>
+#include <string>
+
+#include <cmath>
+
 #include "device_launch_parameters.h"
-#include "Dispatch.h"
+
+#define PI 3.14159265358979323846f
 
 class ImageCommand {
 public:
 	virtual void execute(uchar4** image, size_t* height, size_t* width) = 0;
+	virtual std::string toString() = 0;
 	virtual ~ImageCommand();
 };
 
 class BlackWhiteImageCommand : public ImageCommand {
 public:
 	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
 };
 
 class RotateImageCommand : public ImageCommand {
@@ -24,6 +31,7 @@ class RotateImageCommand : public ImageCommand {
 public:
 	RotateImageCommand(float phi);
 	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
 };
 
 class GammaCorrectionImageCommand : public ImageCommand {
@@ -31,6 +39,7 @@ class GammaCorrectionImageCommand : public ImageCommand {
 public:
 	GammaCorrectionImageCommand(float gc);
 	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
 };
 
 class RadialDistortionImageCommand : public ImageCommand {
@@ -38,6 +47,7 @@ class RadialDistortionImageCommand : public ImageCommand {
 public:
 	RadialDistortionImageCommand(float phi);
 	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
 };
 
 void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha);

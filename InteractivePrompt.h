@@ -1,14 +1,13 @@
-#ifndef INTERACTIVEPROMPT_H
-#define INTERACTIVEPROMPT_H
+#ifndef INTERACTIVEPROMPT_H_
+#define INTERACTIVEPROMPT_H_
 
 #include <list>
-#include <vector>
 #include <iostream>
 #include <string>
 
 #include "Dispatch.h"
+#include "Status.h"
 
-enum class Status{ CONTINUE, EXIT };
 
 class InteractivePrompt {
 public:

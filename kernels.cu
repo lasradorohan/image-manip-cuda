@@ -1,8 +1,7 @@
 #include "kernels.h"
-#include "cmath"
-#include <iostream>
 
 ImageCommand::~ImageCommand() {};
+
 
 __global__ void blackWhite(uchar4* image, size_t height, size_t width) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
@@ -17,7 +16,6 @@ __global__ void blackWhite(uchar4* image, size_t height, size_t width) {
 }
 
 void BlackWhiteImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
-	std::cout << "Executing BlackWhiteImageCommand(height=" << *height << ", width=" << *width << ")\n";
 	size_t in_h = *height;
 	size_t in_w = *width;
 	uchar4* d_image;
@@ -26,6 +24,10 @@ void BlackWhiteImageCommand::execute(uchar4** image, size_t* height, size_t* wid
 	blackWhite <<<dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >>> (d_image, in_h, in_w);
 	cudaMemcpy(*image, d_image, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
 	//image memory, height and width dont change
+}
+
+std::string BlackWhiteImageCommand::toString() {
+	return "BlackWhite()";
 }
 
 
@@ -45,10 +47,9 @@ __global__ void rotate(uchar4* image_in, uchar4* image_out,
 	}
 }
 
-RotateImageCommand::RotateImageCommand(float phi) : phi(phi) {}
+RotateImageCommand::RotateImageCommand(float phi) : phi(phi * PI / 180.0f) {}
 
 void RotateImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
-	std::cout << "Executing RotateImageCommand(height=" << *height << ", width=" << *width << ")\n";
 	size_t in_h = *height;
 	size_t in_w = *width;
 	size_t out_w = in_w * cos(phi) + in_h * sin(phi);
@@ -64,6 +65,10 @@ void RotateImageCommand::execute(uchar4** image, size_t* height, size_t* width) 
 	*image = image_out;
 	*height = out_h;
 	*width = out_w;
+}
+
+std::string RotateImageCommand::toString() {
+	return "Rotate(" + std::to_string(phi) + ")";
 }
 
 __global__ void gammaCorrection(uchar4* image, size_t height, size_t width, float gc) {
@@ -94,6 +99,10 @@ void GammaCorrectionImageCommand::execute(uchar4** image, size_t* height, size_t
 	cudaMemcpy(d_image, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
 	gammaCorrection <<< dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >>> (d_image, in_h, in_w, gc);
 	cudaMemcpy(*image, d_image, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+std::string GammaCorrectionImageCommand::toString() {
+	return "GammaCorrection(" + std::to_string(gc) + ")";
 }
 
 
@@ -130,6 +139,10 @@ void RadialDistortionImageCommand::execute(uchar4** image, size_t* height, size_
 	cudaMemcpy(d_in, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
 	radial <<< dim3(1 + ((in_w - 1) / 32), 1 + ((in_h - 1) / 32), 1), dim3(32, 32, 1) >>> (d_in, d_out, in_h, in_w, k1, scale);
 	cudaMemcpy(*image, d_out, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+std::string RadialDistortionImageCommand::toString() {
+	return "RadialDistortion(" + std::to_string(k1) + ")";
 }
 
 __global__ void contrast(uchar4* image, size_t height, size_t width, float alpha) {
