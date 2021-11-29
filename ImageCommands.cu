@@ -169,6 +169,57 @@ void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha)
 	uchar4* d_image;
 	cudaMalloc(&d_image, in_h * in_w * sizeof(uchar4));
 	cudaMemcpy(d_image, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
-	contrast << <dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >> > (d_image, in_h, in_w, alpha);
+	contrast <<< dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >>> (d_image, in_h, in_w, alpha);
 	cudaMemcpy(*image, d_image, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+__constant__ int mask[3 * 3];
+
+__global__ void sharpen(uchar4* image_in, uchar4* image_out, size_t height, size_t width) {
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+	if (x<width && y<height) {
+		int idx = y * width + x;
+
+		int tempx = 0;
+		int tempy = 0;
+		int tempz = 0;
+		for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++) {
+				int ypos = y - 1 + j;
+				int xpos = x - 1 + i;
+				int pos = ypos * width + xpos;
+				bool nonBoundary = 0 <= ypos && ypos < height && 0 <= xpos && xpos < width;
+				tempx += mask[j*3+i] * (nonBoundary ? image_in[pos].x : image_in[idx].x);
+				tempy += mask[j*3+i] * (nonBoundary ? image_in[pos].y : image_in[idx].y);
+				tempz += mask[j*3+i] * (nonBoundary ? image_in[pos].z : image_in[idx].z);
+			}
+		}
+		tempx = tempx > 255 ? 255 : tempx;
+		tempx = tempx < 0 ? 0 : tempx;
+		tempy = tempy > 255 ? 255 : tempy;
+		tempy = tempy < 0 ? 0 : tempy;
+		tempz = tempz > 255 ? 255 : tempz;
+		tempz = tempz < 0 ? 0 : tempz;
+		image_out[idx].x = tempx;
+		image_out[idx].y = tempy;
+		image_out[idx].z = tempz;
+	}
+}
+
+void SharpeningImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
+	size_t in_h = *height;
+	size_t in_w = *width;
+	uchar4 *d_in, *d_out;
+	int filter[] = { 0,-1,0,-1,5,-1,0,-1,0 };
+	cudaMalloc(&d_in, in_h * in_w * sizeof(uchar4));
+	cudaMalloc(&d_out, in_h * in_w * sizeof(uchar4));
+	cudaMemcpyToSymbol(mask, filter, 3*3*sizeof(int));
+	cudaMemcpy(d_in, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
+	sharpen <<< dim3(1+((in_w-1)/32), 1+((in_h-1)/32), 1), dim3(32, 32, 1) >>> (d_in, d_out, in_h, in_w);
+	cudaMemcpy(*image, d_out, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+std::string SharpeningImageCommand::toString() {
+	return "Sharpen()";
 }

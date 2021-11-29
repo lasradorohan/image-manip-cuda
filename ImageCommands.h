@@ -1,5 +1,5 @@
-#ifndef BLACKWHITE_H_
-#define BLACKWHITE_H_
+#ifndef IMAGE_COMMANDS_H_
+#define IMAGE_COMMANDS_H_
 
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -51,4 +51,11 @@ public:
 };
 
 void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha);
+
+class SharpeningImageCommand : public ImageCommand {
+public:
+	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
+};
+
 #endif

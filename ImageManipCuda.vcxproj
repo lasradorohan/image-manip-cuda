@@ -87,7 +87,7 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="kernels.cu" />
+    <CudaCompile Include="ImageCommands.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Dispatch.h" />
@@ -97,7 +97,7 @@
   <ItemGroup>
     <ClInclude Include="CommandQueue.h" />
     <ClInclude Include="ImageQueue.h" />
-    <ClInclude Include="kernels.h" />
+    <ClInclude Include="ImageCommands.h" />
     <ClInclude Include="InteractivePrompt.h" />
     <ClInclude Include="ProgressBar.h" />
     <ClInclude Include="Status.h" />
