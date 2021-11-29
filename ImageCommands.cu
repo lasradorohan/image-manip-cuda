@@ -1,4 +1,4 @@
-#include "kernels.h"
+#include "ImageCommands.h"
 
 ImageCommand::~ImageCommand() {};
 

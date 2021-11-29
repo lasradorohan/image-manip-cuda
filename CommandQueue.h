@@ -6,13 +6,9 @@
 #include <string>
 #include "ImageCommands.h"
 
-
 class CommandQueue {
 	std::list<std::unique_ptr<ImageCommand>> queue;
 public:
-	/*auto addCommand(std::unique_ptr<ImageCommand> pCommand) -> void {
-		queue.push_back(pCommand);
-	}*/
 	template <class T, class... _Types>
 	auto addCommand(_Types&&... _Args) {
 		queue.push_back(std::make_unique<T>(std::forward<_Types>(_Args)...));
