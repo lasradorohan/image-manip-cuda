@@ -31,8 +31,7 @@ std::string BlackWhiteImageCommand::toString() {
 }
 
 
-__global__ void rotate(uchar4* image_in, uchar4* image_out,
-	size_t in_h, size_t in_w, size_t out_h, size_t out_w, float phi) {
+__global__ void rotate(uchar4* image_in, uchar4* image_out, size_t in_h, size_t in_w, size_t out_h, size_t out_w, float phi) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
 	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
 	int in_x = (out_x - out_w / 2.f) * __cosf(phi) - (out_y - out_h / 2.f) * __sinf(phi) + in_w/2.f;
@@ -106,8 +105,7 @@ std::string GammaCorrectionImageCommand::toString() {
 }
 
 
-__global__ void radial(uchar4* image_in, uchar4* image_out,
-	size_t height, size_t width, float k1, float s) {
+__global__ void radial(uchar4* image_in, uchar4* image_out, size_t height, size_t width, float k1, float s) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
 	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
 	float dx = out_x / (float)width - 0.5f;
@@ -176,31 +174,50 @@ void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha)
 __constant__ int mask[3 * 3];
 
 __global__ void sharpen(uchar4* image_in, uchar4* image_out, size_t height, size_t width) {
-	int x = blockIdx.x * blockDim.x + threadIdx.x;
-	int y = blockIdx.y * blockDim.y + threadIdx.y;
-	if (x<width && y<height) {
-		int idx = y * width + x;
+	extern __shared__ uchar4 sh[];
+	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+	
+	if (x < width && y < height) {
+		unsigned int sh_w = blockDim.x + 2;
+		unsigned int sh_h = blockDim.y + 2;
+
+		unsigned int sh_x = threadIdx.x + 1;
+		unsigned int sh_y = threadIdx.y + 1;
+
+		unsigned int idx = y * width + x;
+
+		sh[sh_w * sh_y + sh_x] = image_in[idx];
+		uchar4 padding = image_in[idx]; //same padding // pos : sh_w*sh_y+sh_x
+		if (sh_x == 1) {
+			sh[sh_w * sh_y] = padding;
+			if(sh_y == 1) sh[sh_w] = padding;
+			else if (sh_y == sh_h-2 || y == height - 1) sh[sh_w * (sh_y + 1)] = padding;
+		}
+		else if (sh_x == sh_w-2 || x == width - 1) {
+			sh[sh_w * sh_y + (sh_x + 1)] = padding;
+			if (sh_y == 1) sh[sh_x + 1] = padding;
+			else if (sh_y == sh_h - 2 || y == height - 1) sh[sh_w * (sh_y + 1) + (sh_x + 1)] = padding;
+		}
+		if (sh_y == 1) sh[sh_x] = padding;
+		else if (sh_y == sh_h-2 || y == height - 1) sh[sh_w * (sh_y + 1) + sh_x] = padding;
+		__syncthreads();
 
 		int tempx = 0;
 		int tempy = 0;
 		int tempz = 0;
 		for (int j = 0; j < 3; j++) {
 			for (int i = 0; i < 3; i++) {
-				int ypos = y - 1 + j;
-				int xpos = x - 1 + i;
-				int pos = ypos * width + xpos;
-				bool nonBoundary = 0 <= ypos && ypos < height && 0 <= xpos && xpos < width;
-				tempx += mask[j*3+i] * (nonBoundary ? image_in[pos].x : image_in[idx].x);
-				tempy += mask[j*3+i] * (nonBoundary ? image_in[pos].y : image_in[idx].y);
-				tempz += mask[j*3+i] * (nonBoundary ? image_in[pos].z : image_in[idx].z);
+				unsigned int sh_pos = (sh_y - 1 + j) * sh_w + (sh_x - 1 + i);
+
+				tempx += mask[j * 3 + i] * sh[sh_pos].x;
+				tempy += mask[j * 3 + i] * sh[sh_pos].y;
+				tempz += mask[j * 3 + i] * sh[sh_pos].z;
 			}
 		}
-		tempx = tempx > 255 ? 255 : tempx;
-		tempx = tempx < 0 ? 0 : tempx;
-		tempy = tempy > 255 ? 255 : tempy;
-		tempy = tempy < 0 ? 0 : tempy;
-		tempz = tempz > 255 ? 255 : tempz;
-		tempz = tempz < 0 ? 0 : tempz;
+		tempx = tempx > 255 ? 255 : (tempx < 0 ? 0 : tempx);
+		tempy = tempy > 255 ? 255 : (tempy < 0 ? 0 : tempy);
+		tempz = tempz > 255 ? 255 : (tempz < 0 ? 0 : tempz);
 		image_out[idx].x = tempx;
 		image_out[idx].y = tempy;
 		image_out[idx].z = tempz;
@@ -216,10 +233,11 @@ void SharpeningImageCommand::execute(uchar4** image, size_t* height, size_t* wid
 	cudaMalloc(&d_out, in_h * in_w * sizeof(uchar4));
 	cudaMemcpyToSymbol(mask, filter, 3*3*sizeof(int));
 	cudaMemcpy(d_in, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
-	sharpen <<< dim3(1+((in_w-1)/32), 1+((in_h-1)/32), 1), dim3(32, 32, 1) >>> (d_in, d_out, in_h, in_w);
+	sharpen <<< dim3(1+((in_w-1)/32), 1+((in_h-1)/32), 1), dim3(32, 32, 1), (32+2)*(32+2)*sizeof(uchar4)>>> (d_in, d_out, in_h, in_w);
 	cudaMemcpy(*image, d_out, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
 }
 
 std::string SharpeningImageCommand::toString() {
 	return "Sharpen()";
 }
+
