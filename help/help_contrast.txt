@@ -1,0 +1,12 @@
+Usage: contrast [n]  
+
+Action:
+	Add contrast command to the command queue.
+
+	Depending upon the value of n, the image contrast will be adjusted.
+
+	The n should be always greater 0.
+
+	If n < 1, the color levels will be compressed and the result will be an image with less contrast.
+
+	If n > 1, the color levels will be expanded and the result will be an image with high contrast.

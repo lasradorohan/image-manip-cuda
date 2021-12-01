@@ -1,0 +1,10 @@
+Usage: rotate [n]
+
+Action:
+	Adds the rotation command to the command queue.
+	
+	Rotates the image by n°.
+	
+	If n is positive, rotation will be in anti-clockwise direction.
+
+	If n is negative, rotation will be in clockwise direction.

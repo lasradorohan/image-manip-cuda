@@ -50,7 +50,14 @@ public:
 	std::string toString();
 };
 
-void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha);
+
+class ContrastImageCommand : public ImageCommand {
+	float alpha;
+public:
+	ContrastImageCommand(float alpha);
+	void execute(uchar4** image, size_t* height, size_t* width);
+	std::string toString();
+};
 
 class SharpeningImageCommand : public ImageCommand {
 public:

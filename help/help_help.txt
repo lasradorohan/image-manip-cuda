@@ -1,0 +1,6 @@
+Usage: help [command]
+
+Action:
+  If `command` is not specified, displays a brief summary of all available commands.
+	
+  If `command` is specified, gives more about `command`.

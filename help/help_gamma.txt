@@ -1,0 +1,8 @@
+Usage: gamma [n]
+
+Action:
+	Adds the gamma command to the command queue.
+	
+	It controls the overall brightness of the image.
+
+	Depending on the value of n the brightness will be adjusted.	

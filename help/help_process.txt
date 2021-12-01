@@ -1,0 +1,6 @@
+Usage: process [command]
+
+Action:
+	If `command` is not specified, executes all commands added to the command queue on all loaded images.
+	
+	If `command` is specified, executes command on all images loaded with the 'load' command in eager mode.

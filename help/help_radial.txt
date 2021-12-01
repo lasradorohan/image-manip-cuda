@@ -1,0 +1,8 @@
+Usage: radial [n]
+
+Action:
+	Adds the radial command to the command queue.
+	
+	Barrel distortion effect if n is negative radial displacement.
+
+	Pincushion distortion effect if n is positive radial displacement.
