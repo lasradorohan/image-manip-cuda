@@ -1,0 +1,13 @@
+This is an implementation of compression built into the filesystem for efficient storage and faster access.
+
+Following is the list of commands:
+help [command]	-	Displays a brief summary of available commands. If `command` is specified gives more about `command`.
+load            -       Loads the image files from the specified path
+listfiles	-	Lists files in current folder.
+process		-       Executes all commands added to the command queue. If 'command' is specified executes command on all image files.
+exit		-  	Exits the command line window.
+listqueue	-	Displays the commands in the command queue.
+save [path]	-	Saves the processed image in the specified path.
+saveoverwrite [path] -  Overwrites the processed image in the specified path.
+view [filepath] - 	Displays the image file in the specified path.
+clear [n]	-	Clears the command in nth position of the command queue.

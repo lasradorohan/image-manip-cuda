@@ -114,7 +114,7 @@ auto InteractivePrompt::executeInput(std::list<std::string>& tokens) -> Status {
     else if (command.compare("contrast") == 0) {
         if (tokens.size() != 2) return Status::InvalidUsage;
         float param = std::stof(*std::next(tokens.begin(), 1));
-        //dispatch.commandQueue.addCommand<ContrastImageCommand>(std::next(tokens.begin(), 1));
+       dispatch.commandQueue.addCommand<ContrastImageCommand>(std::next(tokens.begin(), 1));
     }
     else if (command.compare("sharpen") == 0) {
         if (tokens.size() > 1) return Status::InvalidUsage;

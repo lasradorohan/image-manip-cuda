@@ -1,0 +1,4 @@
+Usage: listfiles
+
+Action:
+	Shows the list of image files with its path.

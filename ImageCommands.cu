@@ -160,8 +160,9 @@ __global__ void contrast(uchar4* image, size_t height, size_t width, float alpha
 	}
 }
 
+ContrastImageCommand::ContrastImageCommand(float alpha) : alpha(alpha) {}
 
-void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha) {
+void ContrastImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
 	size_t in_h = *height;
 	size_t in_w = *width;
 	uchar4* d_image;
@@ -169,6 +170,10 @@ void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha)
 	cudaMemcpy(d_image, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
 	contrast <<< dim3(1 + ((in_h - 1) / 32), 1 + ((in_w - 1) / 32), 1), dim3(32, 32, 1) >>> (d_image, in_h, in_w, alpha);
 	cudaMemcpy(*image, d_image, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+std::string ContrastImageCommand::toString() {
+	return "Contrast(" + std::to_string(alpha) + ")";
 }
 
 __constant__ int mask[3 * 3];

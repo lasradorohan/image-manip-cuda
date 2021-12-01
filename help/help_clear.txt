@@ -1,0 +1,4 @@
+Usage: clear [n] 
+
+Action:
+	Clears the command in the nth position of the command queue.

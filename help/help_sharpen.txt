@@ -1,0 +1,7 @@
+Usage: sharpen
+
+Action: 
+	Adds the sharpen command to the command queue.
+	
+	
+	

@@ -1,0 +1,4 @@
+Usage: listqueue
+
+Action:
+	Displays the commands in the command queue.

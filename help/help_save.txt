@@ -1,0 +1,5 @@
+Usage: save [path]
+
+Action:
+	Save the processed image files in the specified path.
+	

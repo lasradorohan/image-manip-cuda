@@ -1,0 +1,4 @@
+Usage: exit
+
+Action:
+	Exits or closes the command line window.

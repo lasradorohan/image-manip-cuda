@@ -1,0 +1,4 @@
+Usage: view [filepath]
+
+Action: Display the image file in the specified path.
+	

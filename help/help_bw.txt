@@ -1,0 +1,4 @@
+Usage: bw
+
+Action:
+	Adds the blackwhite command to the command queue.

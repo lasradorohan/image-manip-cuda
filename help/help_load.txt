@@ -1,0 +1,6 @@
+Usage: load [path]
+
+Action:
+	Load the image files from the specified path.
+	
+	Displays the number of image files loaded for processing.
