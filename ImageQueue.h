@@ -46,33 +46,38 @@ public:
     }
 
     static auto loadImageRGBA(const std::string& filename, uchar4** imagePtr, size_t* numRows, size_t* numCols) {
-        cv::Mat image = cv::imread(filename.c_str(), cv::IMREAD_COLOR);
+        cv::Mat image = cv::imread(filename.c_str(), cv::IMREAD_UNCHANGED);
         if (image.empty()) {
             std::cerr << "Couldn't open file: " << filename << std::endl;
             exit(1);
         }
-
-        if (image.channels() != 3) {
-            std::cerr << "Image must be color!" << std::endl;
-            exit(1);
-        }
-
         if (!image.isContinuous()) {
             std::cerr << "Image isn't continuous!" << std::endl;
             exit(1);
         }
 
-        cv::Mat imageRGBA;
-        cv::cvtColor(image, imageRGBA, cv::COLOR_BGR2RGBA);
-
         *imagePtr = new uchar4[image.rows * image.cols];
 
-        unsigned char* cvPtr = imageRGBA.ptr<unsigned char>(0);
-        for (size_t i = 0; i < image.rows * image.cols; ++i) {
-            (*imagePtr)[i].x = cvPtr[4 * i + 0];
-            (*imagePtr)[i].y = cvPtr[4 * i + 1];
-            (*imagePtr)[i].z = cvPtr[4 * i + 2];
-            (*imagePtr)[i].w = cvPtr[4 * i + 3];
+        unsigned char* cvPtr = image.ptr<unsigned char>(0);
+        if (image.channels() == 3) {
+            for (size_t i = 0; i < image.rows * image.cols; ++i) {
+                (*imagePtr)[i].x = cvPtr[3 * i + 2];    //r
+                (*imagePtr)[i].y = cvPtr[3 * i + 1];    //g
+                (*imagePtr)[i].z = cvPtr[3 * i + 0];    //b
+                (*imagePtr)[i].w = 255;                 //a
+            }
+        }
+        else if (image.channels() == 4) {
+            for (size_t i = 0; i < image.rows * image.cols; ++i) {
+                (*imagePtr)[i].x = cvPtr[4 * i + 2];    //r
+                (*imagePtr)[i].y = cvPtr[4 * i + 1];    //g
+                (*imagePtr)[i].z = cvPtr[4 * i + 0];    //b
+                (*imagePtr)[i].w = cvPtr[4 * i + 3];    //a
+            }
+        }
+        else {
+            std::cerr << "Image must be color!" << std::endl;
+            exit(1);
         }
 
         *numRows = image.rows;
@@ -91,9 +96,9 @@ public:
         sizes[0] = numRows;
         sizes[1] = numCols;
         cv::Mat imageRGBA(2, sizes, CV_8UC4, (void*)image);
-        cv::Mat imageOutputBGR;
-        cv::cvtColor(imageRGBA, imageOutputBGR, cv::COLOR_RGBA2BGR);
-        cv::imwrite(output_file.c_str(), imageOutputBGR);
+        cv::Mat imageOutputBGRA;
+        cv::cvtColor(imageRGBA, imageOutputBGRA, cv::COLOR_RGBA2BGRA);
+        cv::imwrite(output_file.c_str(), imageOutputBGRA);
     }
 
     auto saveRGBATemp(const uchar4* const image, const size_t numRows, const size_t numCols) {

@@ -30,7 +30,6 @@ std::string BlackWhiteImageCommand::toString() {
 	return "BlackWhite()";
 }
 
-
 __global__ void rotate(uchar4* image_in, uchar4* image_out, size_t in_h, size_t in_w, size_t out_h, size_t out_w, float phi) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
 	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -40,9 +39,9 @@ __global__ void rotate(uchar4* image_in, uchar4* image_out, size_t in_h, size_t 
 		if (0 <= in_x && in_x < in_w && 0 <= in_y && in_y < in_h) {
 			image_out[out_w * out_y + out_x] = image_in[in_y * in_w + in_x];
 		}
-		/*else {
+		else {
 			image_out[out_w * out_y + out_x] = {0, 0, 0, 0};
-		}*/
+		}
 	}
 }
 
@@ -103,7 +102,6 @@ void GammaCorrectionImageCommand::execute(uchar4** image, size_t* height, size_t
 std::string GammaCorrectionImageCommand::toString() {
 	return "GammaCorrection(" + std::to_string(gc) + ")";
 }
-
 
 __global__ void radial(uchar4* image_in, uchar4* image_out, size_t height, size_t width, float k1, float s) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
