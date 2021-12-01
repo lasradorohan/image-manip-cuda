@@ -30,7 +30,6 @@ std::string BlackWhiteImageCommand::toString() {
 	return "BlackWhite()";
 }
 
-
 __global__ void rotate(uchar4* image_in, uchar4* image_out, size_t in_h, size_t in_w, size_t out_h, size_t out_w, float phi) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
 	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -40,9 +39,9 @@ __global__ void rotate(uchar4* image_in, uchar4* image_out, size_t in_h, size_t 
 		if (0 <= in_x && in_x < in_w && 0 <= in_y && in_y < in_h) {
 			image_out[out_w * out_y + out_x] = image_in[in_y * in_w + in_x];
 		}
-		/*else {
+		else {
 			image_out[out_w * out_y + out_x] = {0, 0, 0, 0};
-		}*/
+		}
 	}
 }
 
@@ -104,7 +103,6 @@ std::string GammaCorrectionImageCommand::toString() {
 	return "GammaCorrection(" + std::to_string(gc) + ")";
 }
 
-
 __global__ void radial(uchar4* image_in, uchar4* image_out, size_t height, size_t width, float k1, float s) {
 	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
 	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -159,7 +157,6 @@ __global__ void contrast(uchar4* image, size_t height, size_t width, float alpha
 			image[idx].z = 255;
 	}
 }
-
 
 void executeContrast(uchar4** image, size_t* height, size_t* width, float alpha) {
 	size_t in_h = *height;
@@ -241,3 +238,98 @@ std::string SharpeningImageCommand::toString() {
 	return "Sharpen()";
 }
 
+
+__global__ void rgba_to_xyYA_separated(
+	uchar4* rgba_in,
+	float* x_out, float* y_out, float* logY_out, float* A_out,
+	size_t height, size_t width,
+	float delta
+) {
+	int in_x = blockIdx.x * blockDim.x + threadIdx.x;
+	int in_y = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = in_y * width + in_x;
+	if (in_x < width && in_y < height) {
+		float r = rgba_in[idx].x / 255.f;
+		float g = rgba_in[idx].y / 255.f;
+		float b = rgba_in[idx].z / 255.f;
+		float a = rgba_in[idx].w / 255.f;
+
+		float X = (r * 0.4124f) + (g * 0.3576f) + (b * 0.1805f);
+		float Y = (r * 0.2126f) + (g * 0.7152f) + (b * 0.0722f);
+		float Z = (r * 0.0193f) + (g * 0.1192f) + (b * 0.9505f);
+
+		float L = X + Y + Z;
+		float x = X / L;
+		float y = Y / L;
+
+		float logY = log10f(delta + Y);
+
+		x_out[idx] = x;
+		y_out[idx] = y;
+		logY_out[idx] = logY;
+		A_out[idx] = a;
+	}
+}
+
+__global__ void min_max(float* arr, size_t length, float* minval, float* maxval) {
+	extern __shared__ float2 sh[];
+	int myId = threadIdx.x + blockDim.x * blockIdx.x;
+	int tid = threadIdx.x;
+	sh[tid].x = arr[myId];
+	sh[tid].y = arr[myId];
+	__syncthreads();
+	for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
+		if (tid < s) {
+			sh[tid].x = __min(sh[tid].x, sh[tid + s].x);
+			sh[tid].y = __max(sh[tid].y, sh[tid + s].y);
+		}
+		__syncthreads();
+	}
+	if(tid==0) atomicAdd
+}
+
+
+//
+//void ToneMappingImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
+//	size_t in_h = *height;
+//	size_t in_w = *width;
+//	size_t numPixels = in_h * in_w;
+//	dim3 gridSize(1+((in_w-1)/32), 1+((in_h-1)/32), 1);
+//	dim3 blockSize(32, 32, 1);
+//	uchar4* d_in;
+//	float *d_x, *d_y, *d_logY, *d_A;
+//	cudaMalloc(&d_x, numPixels * sizeof(float));
+//	cudaMalloc(&d_y, numPixels * sizeof(float));
+//	cudaMalloc(&d_logY, numPixels * sizeof(float));
+//	cudaMalloc(&d_A, numPixels * sizeof(float));
+//	cudaMalloc(&d_in, numPixels * sizeof(uchar4));
+//	cudaMemcpy(d_in, *image, numPixels * sizeof(uchar4), cudaMemcpyHostToDevice);
+//	rgba_to_xyYA_separated<<<gridSize, blockSize>>>(d_in, d_x, d_y, d_logY, d_A, in_h, in_w, 0.0001f);
+//	const int numBins = 1024;
+//	unsigned int* d_cdf;
+//	cudaMalloc(&d_cdf, sizeof(unsigned int) * numBins);
+//
+//	//TODO
+//	/*Here are the steps you need to implement
+//	  1) find the minimum and maximum value in the input logLuminance channel
+//		 store in min_logLum and max_logLum
+//	  2) subtract them to find the range
+//	  3) generate a histogram of all the values in the logLuminance channel using
+//		 the formula: bin = (lum[i] - lumMin) / lumRange * numBins
+//	  4) Perform an exclusive scan (prefix sum) on the histogram to get
+//		 the cumulative distribution of luminance values (this should go in the
+//		 incoming d_cdf pointer which already has been allocated for you)       */
+//	float *d_minlogY, * d_maxlogY;
+//	cudaMalloc(&d_minlogY, sizeof(float));
+//	cudaMalloc(&d_maxlogY, sizeof(float));
+//	min_max <<<1+(numPixels-1)/1024, 1024, 1024*size(float2) >>> (d_logY, numPixels, minlogY, maxlogY);
+//	float h_minlogY, h_maxlogY;
+//	cudaMemcpy(&h_minlogY, d_minlogY, sizeof(float), cudaMemcpyDeviceToHost);
+//	cudaMemcpy(&h_maxlogY, d_maxlogY, sizeof(float), cudaMemcpyDeviceToHost);
+//}
+//
+//
+//
+//std::string ToneMappingImageCommand::toString() {
+//	return "ToneMap()";
+//}

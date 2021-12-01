@@ -58,4 +58,10 @@ public:
 	std::string toString();
 };
 
+//class ToneMappingImageCommand : public ImageCommand {
+//public:
+//	void execute(uchar4** image, size_t* height, size_t* width);
+//	std::string toString();
+//};
+
 #endif
