@@ -114,17 +114,56 @@ auto InteractivePrompt::executeInput(std::list<std::string>& tokens) -> Status {
     else if (command.compare("contrast") == 0) {
         if (tokens.size() != 2) return Status::InvalidUsage;
         float param = std::stof(*std::next(tokens.begin(), 1));
-       dispatch.commandQueue.addCommand<ContrastImageCommand>(std::next(tokens.begin(), 1));
+       dispatch.commandQueue.addCommand<ContrastImageCommand>(param);
     }
     else if (command.compare("sharpen") == 0) {
         if (tokens.size() > 1) return Status::InvalidUsage;
         dispatch.commandQueue.addCommand<SharpeningImageCommand>();
+    }
+    else if (command.compare("skew") == 0) {
+        if (tokens.size() != 3) return Status::InvalidUsage;
+        auto it = tokens.begin();
+        float param1 = std::stof(*(++it));
+        float param2 = std::stof(*(++it));
+        dispatch.commandQueue.addCommand<SkewImageCommand>(param1, param2);
+    }
+    else if (command.compare("help") == 0) {
+        if (tokens.size() == 2) {
+            displayHelp(*(++tokens.begin()));
+        }
+        else if (tokens.size() == 1) {
+            displayGeneralHelp();
+        }
+        else {
+            return Status::InvalidUsage;
+        }
     }
     // TODO: other commands
     else {
 
     }
     return ret;
+}
+
+auto InteractivePrompt::displayHelp(std::string command) -> void {
+    std::ifstream in;
+    /*if (command.size() == 0) {
+        in.open("./help/help.txt");
+    }
+    else */if (std::filesystem::is_regular_file(".\\help\\help_" + command + ".txt")) {
+        in.open(".\\help\\help_" + command + ".txt");
+    }
+    else {
+        std::cout << "No help page found for `" << command << "`" << std::endl;
+        return;
+    }
+    std::cout << std::endl << std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()) << std::endl << std::endl;
+}
+
+auto InteractivePrompt::displayGeneralHelp() -> void {
+    std::ifstream in("./help/help.txt");
+    std::cout << std::endl << std::string(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()) << std::endl << std::endl;
+
 }
 
 auto InteractivePrompt::printPromptString() -> void {

@@ -244,3 +244,46 @@ std::string SharpeningImageCommand::toString() {
 	return "Sharpen()";
 }
 
+SkewImageCommand::SkewImageCommand(float thetaX, float thetaY) : thetaX(thetaX* PI / 180.f), thetaY(thetaY* PI / 180.f) {}
+
+__global__ void skew(uchar4* image_in, uchar4* image_out, size_t in_h, size_t in_w, size_t out_h, size_t out_w, float tx, float ty) {
+	int out_x = blockIdx.x * blockDim.x + threadIdx.x;
+	int out_y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	float ttx = __tanf(tx);
+	float tty = __tanf(ty);
+
+	int in_x = out_x + out_y * ttx - (tx > 0 ? in_h * ttx : 0);
+	int in_y = out_y + out_x * tty - (ty > 0 ? in_w * tty : 0);
+	
+	if (out_x < out_w && out_y < out_h) {
+		if (0 <= in_x && in_x < in_w && 0 <= in_y && in_y < in_h) {
+			image_out[out_w * out_y + out_x] = image_in[in_y * in_w + in_x];
+		}
+		else {
+			image_out[out_w * out_y + out_x] = { 0, 0, 0, 0 };
+		}
+	}
+}
+
+void SkewImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
+	size_t in_h = *height;
+	size_t in_w = *width;
+	size_t out_w = in_w + in_h * tan(abs(thetaX));
+	size_t out_h = in_h + in_w * tan(abs(thetaY));
+	uchar4* image_out = new uchar4[out_w * out_h];
+	uchar4* d_in, * d_out;
+	cudaMalloc(&d_in, in_h * in_w * sizeof(uchar4));
+	cudaMalloc(&d_out, out_h * out_w * sizeof(uchar4));
+	cudaMemcpy(d_in, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
+	skew <<< dim3(1 + ((out_w - 1) / 32), 1 + ((out_h - 1) / 32), 1), dim3(32, 32, 1) >> > (d_in, d_out, in_h, in_w, out_h, out_w, thetaX, thetaY);
+	cudaMemcpy(image_out, d_out, out_h * out_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+	delete[] * image;
+	*image = image_out;
+	*height = out_h;
+	*width = out_w;
+}
+
+std::string SkewImageCommand::toString() {
+	return "Skew(" + std::to_string(thetaX) + ", " + std::to_string(thetaY) + ")";
+}

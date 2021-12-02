@@ -116,7 +116,12 @@ public:
 
     auto display() {
         cv::Mat image = cv::imread(currentPath().string(), cv::IMREAD_COLOR);
-        cv::imshow(originPath.filename().string(), image);
+        //cv::Mat scaled;
+        //cv::resize(scaled , image, cv::Size(), 0.1, 0.1);
+        std::string windowName = originPath.filename().string();
+        cv::namedWindow(windowName, cv::WINDOW_NORMAL);
+        cv::imshow(windowName, image);
+        cv::waitKey();
     }
 };
 

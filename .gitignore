@@ -365,3 +365,4 @@ FodyWeavers.xsd
 
 # test images
 resources
+.temp/

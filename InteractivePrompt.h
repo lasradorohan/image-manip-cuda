@@ -2,7 +2,7 @@
 #define INTERACTIVEPROMPT_H_
 
 #include <list>
-#include <iostream>
+#include <fstream>
 #include <string>
 
 #include "Dispatch.h"
@@ -17,6 +17,9 @@ public:
 	auto printPromptString() -> void;
 	auto executeInput(std::list<std::string>& tokens) -> Status;
 	auto invalidUsage(const std::string& command);
+	auto displayHelp(std::string command) -> void;
+	auto displayGeneralHelp() -> void;
+
 };
 
 

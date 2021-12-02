@@ -7,9 +7,9 @@
 auto testIndividualCommand() -> void {
 	uchar4* image;
 	size_t height, width;
-	Image::loadImageRGBA(".\\resources\\opera_house.png", &image, &height, &width);
-	RotateImageCommand(5).execute(&image, &height, &width);
-	Image::saveImageRGBA(image, height, width, ".\\resources\\opera_house.png");
+	Image::loadImageRGBA(".\\resources\\4.jpg", &image, &height, &width);
+	SkewImageCommand(0, 10).execute(&image, &height, &width);
+	Image::saveImageRGBA(image, height, width, ".\\resources\\4_mod.jpg");
 }
 
 auto testCommandQueue() -> void {
