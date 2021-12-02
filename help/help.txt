@@ -17,3 +17,4 @@ gamma [n]	-	Adds the gamma command to command queue with gamma level n as parame
 radial [n]	-	Adds the radial command to command queue with the distortion level n as parameter.
 rotate [n] 	-	Adds the rotate command to command queue with the angle of rotation n as parameter.
 sharpen 	-	Adds the sharpen command to command queue.
+gaussianblur    -       Adds gaussian blur command to command queue.
