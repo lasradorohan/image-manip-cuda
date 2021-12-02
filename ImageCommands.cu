@@ -287,3 +287,108 @@ void SkewImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
 std::string SkewImageCommand::toString() {
 	return "Skew(" + std::to_string(thetaX) + ", " + std::to_string(thetaY) + ")";
 }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+__constant__ double K[10 * 10];
+
+__global__ void gaussian(uchar4* image_in, uchar4* image_out, size_t height, size_t width, int dim) {
+	extern __shared__ uchar4 sh[];
+	unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+	unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+
+	if (x < width && y < height) {
+		unsigned int sh_w = blockDim.x + 2;
+		unsigned int sh_h = blockDim.y + 2;
+
+		unsigned int sh_x = threadIdx.x + 1;
+		unsigned int sh_y = threadIdx.y + 1;
+
+		unsigned int idx = y * width + x;
+
+		sh[sh_w * sh_y + sh_x] = image_in[idx];
+		uchar4 padding = image_in[idx]; //same padding // pos : sh_w*sh_y+sh_x
+		if (sh_x == 1) {
+			sh[sh_w * sh_y] = padding;
+			if (sh_y == 1) sh[sh_w] = padding;
+			else if (sh_y == sh_h - 2 || y == height - 1) sh[sh_w * (sh_y + 1)] = padding;
+		}
+		else if (sh_x == sh_w - 2 || x == width - 1) {
+			sh[sh_w * sh_y + (sh_x + 1)] = padding;
+			if (sh_y == 1) sh[sh_x + 1] = padding;
+			else if (sh_y == sh_h - 2 || y == height - 1) sh[sh_w * (sh_y + 1) + (sh_x + 1)] = padding;
+		}
+		if (sh_y == 1) sh[sh_x] = padding;
+		else if (sh_y == sh_h - 2 || y == height - 1) sh[sh_w * (sh_y + 1) + sh_x] = padding;
+		__syncthreads();
+
+		double tempx = 0;
+		double tempy = 0;
+		double tempz = 0;
+		for (int j = 0; j < 3; j++) {
+			for (int i = 0; i < 3; i++) {
+				unsigned int sh_pos = (sh_y - 1 + j) * sh_w + (sh_x - 1 + i);
+
+				tempx += K[j * 3 + i] * sh[sh_pos].x;
+				tempy += K[j * 3 + i] * sh[sh_pos].y;
+				tempz += K[j * 3 + i] * sh[sh_pos].z;
+			}
+		}
+		tempx = tempx > 255 ? 255 : (tempx < 0 ? 0 : tempx);
+		tempy = tempy > 255 ? 255 : (tempy < 0 ? 0 : tempy);
+		tempz = tempz > 255 ? 255 : (tempz < 0 ? 0 : tempz);
+		image_out[idx].x = tempx;
+		image_out[idx].y = tempy;
+		image_out[idx].z = tempz;
+	}
+}
+
+
+
+void generateGaussian(double* K, int dim, int radius) {
+	double stdev = 1.0;
+	double pi = 355.0 / 113.0;
+	double constant = 1.0 / (2.0 * pi * pow(stdev, 2));
+	double sum = 0;
+	for (int i = -radius; i < radius + 1; ++i)
+	{
+		for (int j = -radius; j < radius + 1; ++j)
+		{
+			K[(i + radius) * dim + (j + radius)] = constant * (1 / exp((pow(i, 2) + pow(j, 2)) / (2 * pow(stdev, 2))));
+			sum += K[(i + radius) * dim + (j + radius)];
+
+		}
+	}
+	for (int i = -radius; i < radius + 1; ++i)
+	{
+		for (int j = -radius; j < radius + 1; ++j)
+		{
+			K[(i + radius) * dim + (j + radius)] = (K[(i + radius) * dim + (j + radius)]) / sum;
+
+		}
+	}
+}
+
+
+void GaussianBlurImageCommand::execute(uchar4** image, size_t* height, size_t* width) {
+	size_t in_h = *height;
+	size_t in_w = *width;
+	uchar4* d_in, * d_out;
+	
+	int dim = 3;
+	int radius = floor(dim / 2);
+	
+	double* filter = (double*)malloc(dim * dim * sizeof(double));
+	generateGaussian(filter, dim, radius);
+	cudaMalloc(&d_in, in_h * in_w * sizeof(uchar4));
+	cudaMalloc(&d_out, in_h * in_w * sizeof(uchar4));
+	cudaMemcpyToSymbol(K, filter, dim * dim * sizeof(double));
+	cudaMemcpy(d_in, *image, in_h * in_w * sizeof(uchar4), cudaMemcpyHostToDevice);
+	
+	gaussian<<< dim3(1 + ((in_w - 1) / 32), 1 + ((in_h - 1) / 32), 1), dim3(32, 32, 1), (32 + 2)* (32 + 2) * sizeof(uchar4) >> > (d_in, d_out, in_h, in_w, dim);
+	cudaMemcpy(*image, d_out, in_h * in_w * sizeof(uchar4), cudaMemcpyDeviceToHost);
+}
+
+std::string GaussianBlurImageCommand::toString() {
+	return "GaussianBlur()";
+}

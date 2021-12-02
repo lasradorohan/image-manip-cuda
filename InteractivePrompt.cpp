@@ -127,6 +127,10 @@ auto InteractivePrompt::executeInput(std::list<std::string>& tokens) -> Status {
         float param2 = std::stof(*(++it));
         dispatch.commandQueue.addCommand<SkewImageCommand>(param1, param2);
     }
+    else if (command.compare("gaussianblur") == 0) {
+        if (tokens.size() > 1) return Status::InvalidUsage;
+        dispatch.commandQueue.addCommand<GaussianBlurImageCommand>();
+    }
     else if (command.compare("help") == 0) {
         if (tokens.size() == 2) {
             displayHelp(*(++tokens.begin()));

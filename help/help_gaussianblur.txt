@@ -1,0 +1,4 @@
+Usage: gaussianblur
+
+Action:
+	Adds the Gaussian Blur Filter command to the command queue.

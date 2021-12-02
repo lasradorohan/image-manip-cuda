@@ -7,9 +7,10 @@
 auto testIndividualCommand() -> void {
 	uchar4* image;
 	size_t height, width;
-	Image::loadImageRGBA(".\\resources\\4.jpg", &image, &height, &width);
-	SkewImageCommand(0, 10).execute(&image, &height, &width);
-	Image::saveImageRGBA(image, height, width, ".\\resources\\4_mod.jpg");
+	Image::loadImageRGBA(".\\resources\\Lenna.png", &image, &height, &width);
+	//SkewImageCommand(0, 10).execute(&image, &height, &width);
+	GaussianBlurImageCommand().execute(&image, &height, &width);
+	Image::saveImageRGBA(image, height, width, ".\\resources\\LennaBlurred.jpg");
 }
 
 auto testCommandQueue() -> void {
@@ -25,5 +26,6 @@ auto testCommandQueue() -> void {
 }
 
 auto main() -> int {
-	InteractivePrompt().promptLoop();
+	//InteractivePrompt().promptLoop();
+	testIndividualCommand();
 }
