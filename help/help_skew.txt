@@ -1,4 +1,4 @@
-Usage: view thetaX thetaY
+Usage: skew thetaX thetaY
 
 Action: Adds skew command to the queue. The Skews the image `thetaX` degrees in the x-direction and `thetaY` degrees in the y-direction.
 	

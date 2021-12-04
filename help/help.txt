@@ -11,6 +11,7 @@ save [path] 	-	Saves the processed image in the specified path.
 save overwrite  -	Overwrites the processed image.
 view [filepath] - 	Displays the image file in the specified path.
 clear [n]	-	Clears the command in nth position of the command queue.
+clearfiles	-	Clears the loaded image files.
 bw		-	Adds the blackwhite command to the command queue.
 contrast [n] 	-	Adds the contrast command to the command queue with contrast level n as parameter.
 gamma [n]	-	Adds the gamma command to command queue with gamma level n as parameter.

@@ -1,0 +1,4 @@
+Usage: clearfiles
+
+Action:
+	Clears the loaded image files.
