@@ -1,0 +1,4 @@
+Usage: blur 
+
+Action:
+	Adds the blur command to the command queue and blurs the image with Standard deviation 1.00 for Gaussian Distribution.
